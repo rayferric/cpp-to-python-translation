@@ -1,5 +1,4 @@
 from antlr4 import *
-from antlr4.tree import Tree
 from cpp.CppLexer import CppLexer
 from cpp.CppParser import CppParser
 import sys
@@ -97,7 +96,7 @@ def unary_operation_to_python(ctx: CppParser.UnaryOperationContext) -> str:
     prefix = ctx.unaryPrefixOperator().getText() if ctx.unaryPrefixOperator() is not None else ""
     postfix = ctx.unaryPostfixOperator().getText() if ctx.unaryPostfixOperator() is not None else ""
     
-    # NOTE: Increment/decrement operators should be used as expressions in source C++ code
+    # NOTE: Increment/decrement operators should not be used as expressions in source C++ code.
     if postfix == "++":
         return f"{value} += 1"
     elif postfix == "--":
@@ -215,10 +214,6 @@ def for_statement_to_python(ctx: CppParser.ForStatementContext) -> str:
     
     return out
 
-# switchStatement: SWITCH LEFT_PAREN expression RIGHT_PAREN LEFT_BRACKET switchCase* switchDefault? RIGHT_BRACKET;
-# switchCase: CASE expression COLON executableScope;
-# switchDefault: DEFAULT COLON executableScope;
-
 def switch_statement_to_python(ctx: CppParser.SwitchStatementContext) -> str:
     out = ""
     expression = to_python(ctx.expression())
@@ -249,6 +244,12 @@ def break_statement_to_python(ctx: CppParser.BreakStatementContext) -> str:
 def continue_statement_to_python(ctx: CppParser.ContinueStatementContext) -> str:
     return "continue"
 
+def assignment_statement_to_python(ctx: CppParser.AssignmentStatementContext) -> str:
+    identifier = ctx.identifier().getText()
+    operator = ctx.assignmentOperator().getText()
+    value = to_python(ctx.expression())
+    return f"{identifier} {operator} {value}"
+
 context_type_handlers = {
     CppParser.ProgramContext: program_to_python,
     CppParser.ExecutableScopeContext: executable_scope_to_python,
@@ -273,6 +274,7 @@ context_type_handlers = {
     CppParser.SwitchStatementContext: switch_statement_to_python,
     CppParser.BreakStatementContext: break_statement_to_python,
     CppParser.ContinueStatementContext: continue_statement_to_python,
+    CppParser.AssignmentStatementContext: assignment_statement_to_python
 }
 
 def to_python(ctx: ParserRuleContext) -> str:
@@ -303,7 +305,6 @@ def main():
 
     # Add imports marked as used by to_python
     if len(imports) > 0:
-        print("Imports:")
         out = "\n".join(imports) + '\n\n' + out
 
     print(out)

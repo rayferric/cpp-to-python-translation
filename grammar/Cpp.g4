@@ -10,7 +10,7 @@ functionDefinition: typeSpecifier identifier LEFT_PAREN argumentListDefinition? 
 argumentListDefinition: argumentDefinition (COMMA argumentDefinition)*;
 argumentDefinition: typeSpecifier identifier;
 executableScope: statement*;
-statement: variableDeclaration | coutStatement | cinStatement | returnStatement | ifStatement | whileStatement | forStatement | switchStatement | breakStatement | continueStatement | expressionStatement;
+statement: variableDeclaration | coutStatement | cinStatement | returnStatement | ifStatement | whileStatement | forStatement | switchStatement | breakStatement | continueStatement | assignmentStatement | expressionStatement;
 coutStatement: (STD SCOPE_RES)? COUT (SHIFT_LEFT (expression | coutEndl))+ SEMICOLON;
 coutEndl: STD SCOPE_RES ENDL;
 cinStatement: (STD SCOPE_RES)? CIN SHIFT_RIGHT identifier SEMICOLON;
@@ -29,6 +29,8 @@ switchDefault: DEFAULT COLON executableScope (BREAK SEMICOLON)?;
 breakStatement: BREAK SEMICOLON;
 continueStatement: CONTINUE SEMICOLON;
 executableScopeOrStatement: LEFT_BRACKET executableScope RIGHT_BRACKET | statement;
+assignmentStatement: identifier assignmentOperator expression SEMICOLON;
+assignmentOperator: ASSIGN | ASSIGN_ADD | ASSIGN_SUB | ASSIGN_MUL | ASSIGN_DIV;
 expressionStatement: expression SEMICOLON;
 expression: atomicExpression | binaryOperationSequence | unaryOperation | functionCall;
 atomicExpression: ANY_LITERAL | ID | LEFT_PAREN expression RIGHT_PAREN;
