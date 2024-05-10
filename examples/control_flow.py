@@ -13,6 +13,7 @@ def main() -> int:
     print(i, " ", sep='', end='')
     i += 1
   print("\n", sep='', end='')
+  print("Counting from 1 to 5 using for loop: ", sep='', end='')
   j: int = 1
   while j <= 5:
     print(j, " ", sep='', end='')

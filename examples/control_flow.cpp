@@ -24,7 +24,7 @@ int main() {
     std::cout << "\n";
 
     // Demonstrate for loop
-    // std::cout << "Counting from 1 to 5 using for loop: ";
+    std::cout << "Counting from 1 to 5 using for loop: ";
     for (int j = 1; j <= 5; j++) {
         std::cout << j << " ";
     }
