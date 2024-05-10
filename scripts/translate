@@ -1,0 +1,25 @@
+#!/bin/python3
+
+import os
+import sys
+import subprocess as sp
+
+examples_dir = "cpp-examples"
+
+script_dir = os.path.dirname(os.path.realpath(__file__))
+translate_py = os.path.normpath(os.path.join(script_dir, "..", "translate.py"))
+
+# Check if filename is given in args
+if len(sys.argv) > 1:
+    filenames = [sys.argv[1] + ".cpp"]
+else:
+    filenames = os.listdir(examples_dir)
+
+# If filename is not given, loop over all files in cpp-examples
+for filename in filenames:
+    if filename.endswith(".cpp"):
+        print("Translating " + filename + " to Python")
+        ret = sp.run(["python3", translate_py, os.path.join(examples_dir, filename)])
+        if ret.returncode != 0:
+            print("Error while translating " + filename)
+            break

@@ -100,6 +100,12 @@ WHILE: 'while';
 XOR: 'xor';
 XOR_EQ: 'xor_eq';
 
+STD: 'std';
+COUT: 'cout';
+CIN: 'cin';
+ENDL: 'endl';
+STRING: 'string';
+
 INCR: '++';
 DECR: '--';
 ADD: '+';
@@ -131,8 +137,8 @@ ASSIGN_RSH: '>>=';
 BIT_AND: '&';
 BIT_OR: '|';
 BIT_NOT: '~';
-SHL: '<<';
-SHR: '>>';
+SHIFT_LEFT: '<<';
+SHIFT_RIGHT: '>>';
 ARROW_STAR: '->*';
 ARROW: '->';
 QUESTION: '?';
