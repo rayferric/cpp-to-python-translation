@@ -41,6 +41,79 @@ def executable_scope_to_python(ctx: CppParser.ExecutableScopeContext) -> str:
         out = "  pass\n"
     return out
 
+def class_scope_to_python(ctx: CppParser.ClassScopeContext) -> str:
+    scope_infos.append(ScopeInfo())
+
+    out = ""
+    for child in ctx.getChildren():
+        lines = to_python(child)
+        if len(lines.strip()) > 0:
+            for line in lines.split('\n'):
+                if len(line.strip()) > 0:
+                    out += "  " + line + "\n"
+
+    # Remove the scope info
+    scope_infos.pop()
+
+    if len(out) == 0:
+        out = "  pass\n"
+    return out
+
+def void_function_scope_to_python(ctx: CppParser.VoidFunctionScopeContext) -> str:
+    scope_infos.append(ScopeInfo())
+
+    out = ""
+    for child in ctx.getChildren():
+        lines = to_python(child)
+        if len(lines.strip()) > 0:
+            for line in lines.split('\n'):
+                if len(line.strip()) > 0:
+                    out += "  " + line + "\n"
+
+    # Remove the scope info
+    scope_infos.pop()
+
+    if len(out) == 0:
+        out = "  pass\n"
+    return out
+
+def constructor_scope_to_python(ctx: CppParser.ConstructorScopeContext) -> str:
+    scope_infos.append(ScopeInfo())
+
+    out = ""
+    for child in ctx.getChildren():
+        lines = to_python(child)
+        if len(lines.strip()) > 0:
+            for line in lines.split('\n'):
+                if len(line.strip()) > 0:
+                    out += "  " + line + "\n"
+
+    # Remove the scope info
+    scope_infos.pop()
+
+    if len(out) == 0:
+        out = "  pass\n"
+    return out
+
+def loop_scope_to_python(ctx: CppParser.LoopScopeContext) -> str:
+    scope_infos.append(ScopeInfo())
+
+    out = ""
+    for child in ctx.getChildren():
+        lines = to_python(child)
+        if len(lines.strip()) > 0:
+            for line in lines.split('\n'):
+                if len(line.strip()) > 0:
+                    out += "  " + line + "\n"
+
+    # Remove the scope info
+    scope_infos.pop()
+
+    if len(out) == 0:
+        out = "  pass\n"
+    return out
+
+
 def function_definition_to_python(ctx: CppParser.FunctionDefinitionContext) -> str:
     return_type = to_python(ctx.typeSpecifier())
     name = ctx.identifier().getText()
@@ -48,6 +121,37 @@ def function_definition_to_python(ctx: CppParser.FunctionDefinitionContext) -> s
     body_str = to_python(ctx.executableScope())
 
     return f"def {name}({args_str}) -> {return_type}:\n{body_str}\n"
+
+def void_function_definition_to_python(ctx: CppParser.VoidFunctionDefinitionContext) -> str:
+    name = ctx.identifier().getText()
+    args_str = to_python(ctx.argumentListDefinition()) if ctx.argumentListDefinition() is not None else ""
+    body_str = to_python(ctx.voidFunctionScope())
+
+    return f"def {name}({args_str}) -> None:\n{body_str}\n"
+
+def class_definition_to_python(ctx: CppParser.ClassDefinitionContext) -> str:
+    name = ctx.identifier().getText()
+    body_str = to_python(ctx.classScope())
+    return f"class {name}:\n{body_str}\n"
+
+def constructor_definition_to_python(ctx: CppParser.ConstructorDeclarationContext) -> str:
+    args_str = to_python(ctx.argumentListDefinition()) if ctx.argumentListDefinition() is not None else ""
+    body_str = to_python(ctx.constructorScope())
+    return f"def __init__(self, {args_str}):\n {body_str}\n"
+
+
+def method_definition_to_python(ctx: CppParser.MethodDefinitionContext) -> str:
+    if ctx.typeSpecifier() is not None:
+        return_type = to_python(ctx.typeSpecifier())
+    else:
+        return_type = "None"
+    name = ctx.identifier().getText()
+    args_str = to_python(ctx.argumentListDefinition()) if ctx.argumentListDefinition() is not None else ""
+    if ctx.executableScope() is not None:
+        body_str = to_python(ctx.executableScope())
+    else:
+        body_str = to_python(ctx.voidFunctionScope())
+    return f"def {name}(self, {args_str}) -> {return_type}:\n{body_str}\n"
 
 def argument_list_definition_to_python(ctx: CppParser.ArgumentListDefinitionContext) -> str:
     args = []
@@ -88,7 +192,7 @@ def binary_operation_sequence_to_python(ctx: CppParser.BinaryOperationSequenceCo
         if isinstance(child, CppParser.AtomicExpressionContext):
             out += to_python(child)
         elif isinstance(child, CppParser.BinaryOperatorContext):
-            out += f" {child.getText()} "
+            out += f"{child.getText()}"
     return out
 
 def unary_operation_to_python(ctx: CppParser.UnaryOperationContext) -> str:
@@ -117,6 +221,26 @@ def atomic_expression_to_python(ctx: CppParser.AtomicExpressionContext) -> str:
         return f"({to_python(ctx.expression())})"
     else:
         return ctx.getText()
+
+def object_creation_to_python(ctx: CppParser.ObjectCreationContext) -> str:
+    name = ctx.getChild(1).getText()
+    constructor_call = to_python(ctx.constructorCall())
+    return f"{name} = {constructor_call})"
+
+def constructor_call_to_python(ctx: CppParser.ConstructorCallContext) -> str:
+    name = ctx.identifier().getText()
+    args_str = to_python(ctx.argumentList()) if ctx.argumentList() is not None else ""
+    return f"{name}({args_str}"
+
+def atributes_to_python(ctx: CppParser.AtributesContext) -> str:
+    object_name = ctx.getChild(0).getText()
+    atribute_name = ctx.getChild(2).getText()
+    return f"{object_name}.{atribute_name}"
+
+def methods_to_python(ctx: CppParser.MethodsContext) -> str:
+    object_name = ctx.identifier().getText()
+    function_call = to_python(ctx.functionCall())
+    return f"{object_name}.{function_call}"
     
 def function_call_to_python(ctx: CppParser.FunctionCallContext) -> str:
     name = ctx.identifier().getText()
@@ -167,6 +291,15 @@ def executable_scope_or_statement_to_python(ctx: CppParser.ExecutableScopeOrStat
             statement = "pass"
         return f"  {statement}\n"
 
+def loop_scope_or_statement_to_python(ctx: CppParser.LoopScopeOrStatementContext) -> str:
+    if ctx.loopScope() is not None:
+        return to_python(ctx.loopScope())
+    else:
+        loop_statement = to_python(ctx.loopStatement())
+        if len(loop_statement.strip()) == 0:
+            loop_statement = "pass"
+        return f"  {loop_statement}\n"
+
 def if_statement_to_python(ctx: CppParser.IfStatementContext) -> str:
     condition = to_python(ctx.expression())
     body = to_python(ctx.executableScopeOrStatement())
@@ -185,7 +318,7 @@ def if_statement_to_python(ctx: CppParser.IfStatementContext) -> str:
 
 def while_statement_to_python(ctx: CppParser.WhileStatementContext) -> str:
     condition = to_python(ctx.expression())
-    body = to_python(ctx.executableScopeOrStatement())
+    body = to_python(ctx.loopScopeOrStatement())
     return f"while {condition}:\n{body}"
 
 def for_statement_to_python(ctx: CppParser.ForStatementContext) -> str:
@@ -205,7 +338,7 @@ def for_statement_to_python(ctx: CppParser.ForStatementContext) -> str:
     else:
         out += "while True:\n"
 
-    body = to_python(ctx.executableScopeOrStatement())
+    body = to_python(ctx.loopScopeOrStatement())
     out += body
 
     update = ctx.forStatementUpdate().expression()
@@ -244,11 +377,20 @@ def break_statement_to_python(ctx: CppParser.BreakStatementContext) -> str:
 def continue_statement_to_python(ctx: CppParser.ContinueStatementContext) -> str:
     return "continue"
 
+def public_area_to_python(ctx: CppParser.PublicAreaContext) -> str:
+    return " "
+
 def assignment_statement_to_python(ctx: CppParser.AssignmentStatementContext) -> str:
     identifier = ctx.identifier().getText()
     operator = ctx.assignmentOperator().getText()
     value = to_python(ctx.expression())
     return f"{identifier} {operator} {value}"
+
+def assignment_statement_in_constructor_to_python(ctx: CppParser.AssignmentStatementInConstructorContext) -> str:
+    identifier = ctx.identifier().getText()
+    operator = ctx.assignmentOperator().getText()
+    value = to_python(ctx.expression())
+    return f"self.{identifier} {operator} {value}"
 
 context_type_handlers = {
     CppParser.ProgramContext: program_to_python,
@@ -274,7 +416,22 @@ context_type_handlers = {
     CppParser.SwitchStatementContext: switch_statement_to_python,
     CppParser.BreakStatementContext: break_statement_to_python,
     CppParser.ContinueStatementContext: continue_statement_to_python,
-    CppParser.AssignmentStatementContext: assignment_statement_to_python
+    CppParser.AssignmentStatementContext: assignment_statement_to_python,
+    CppParser.ClassDefinitionContext: class_definition_to_python,
+    CppParser.ClassScopeContext: class_scope_to_python,
+    CppParser.VoidFunctionDefinitionContext: void_function_definition_to_python,
+    CppParser.VoidFunctionScopeContext: void_function_scope_to_python,
+    CppParser.ConstructorDeclarationContext: constructor_definition_to_python,
+    CppParser.ConstructorScopeContext: constructor_scope_to_python,
+    CppParser.ObjectCreationContext: object_creation_to_python,
+    CppParser.ConstructorCallContext: constructor_call_to_python,
+    CppParser.AtributesContext: atributes_to_python,
+    CppParser.MethodsContext: methods_to_python,
+    CppParser.LoopScopeContext: loop_scope_to_python,
+    CppParser.PublicAreaContext: public_area_to_python,
+    CppParser.LoopScopeOrStatementContext: loop_scope_or_statement_to_python,
+    CppParser.MethodDefinitionContext: method_definition_to_python,
+    CppParser.AssignmentStatementInConstructorContext: assignment_statement_in_constructor_to_python,
 }
 
 def to_python(ctx: ParserRuleContext) -> str:
@@ -299,7 +456,7 @@ def main():
     tree = parser.program()
 
     # Display the parse tree
-    # print(tree.toStringTree(recog=parser))
+    print(tree.toStringTree(recog=parser))
 
     out = to_python(tree)
 
