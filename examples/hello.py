@@ -6,7 +6,7 @@ def say_hey(name: str) -> None:
 
 def main() -> int:
   print(hello(), '\n', sep='', end='')
-  print("Enter your name: ", sep='', end='')
+  print("Enter your name: ", end='')
   name = str(input())
   say_hey(name)
   return 0

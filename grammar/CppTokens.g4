@@ -105,6 +105,7 @@ COUT: 'cout';
 CIN: 'cin';
 ENDL: 'endl';
 STRING: 'string';
+STD_TO_STRING: STD SCOPE_RES 'to_string';
 
 INCR: '++';
 DECR: '--';
