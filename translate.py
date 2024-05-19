@@ -6,6 +6,8 @@ import sys
 class ScopeInfo:
     def __init__(self):
         self.variable_types = {}
+        self.class_name = None
+        self.class_inherits = False
 
 imports = set()
 scope_infos: list[ScopeInfo] = [ScopeInfo()]
@@ -15,6 +17,18 @@ def get_variable_type(name: str) -> str:
         if name in scope_infos[i].variable_types:
             return scope_infos[i].variable_types[name]
     return None
+
+def get_current_class_name() -> str:
+    for i in range(len(scope_infos) - 1, -1, -1):
+        if scope_infos[i].class_name is not None:
+            return scope_infos[i].class_name
+    return None
+
+def current_class_inherits() -> bool:
+    for i in range(len(scope_infos) - 1, -1, -1):
+        if scope_infos[i].class_inherits:
+            return True
+    return False
 
 def program_to_python(ctx: CppParser.ProgramContext) -> str:
     out = ""
@@ -266,7 +280,12 @@ def assignment_statement_to_python(ctx: CppParser.AssignmentStatementContext) ->
 # ctorDefinition: identifier LEFT_PAREN argumentListDefinition? RIGHT_PAREN LEFT_BRACKET executableScope RIGHT_BRACKET;
 # accessSpecifier: (PUBLIC | PRIVATE | PROTECTED) COLON;
 def class_definition_to_python(ctx: CppParser.ClassDefinitionContext) -> str:
+    name = ctx.identifier().getText()
+
     scope_infos.append(ScopeInfo()) # Stores information about variables declared in the class
+    scope_infos[-1].class_name = name
+    if ctx.baseClassSpecifier() is not None:
+        scope_infos[-1].class_inherits = True
 
     # Populate scope info with vars
     for child in ctx.getChildren():
@@ -274,7 +293,6 @@ def class_definition_to_python(ctx: CppParser.ClassDefinitionContext) -> str:
             if child.variableDeclaration() is not None:
                 to_python(child.variableDeclaration()) # populates scope info
 
-    name = ctx.identifier().getText()
     body = ""
     for child in ctx.getChildren():
         if isinstance(child, CppParser.ClassDefinitionItemContext):
@@ -296,22 +314,40 @@ def class_definition_to_python(ctx: CppParser.ClassDefinitionContext) -> str:
     if len(body.strip()) == 0:
         body = "  pass\n"
 
-    return f"class {name}:\n{body}"
+    if ctx.baseClassSpecifier() is not None:
+        base_class = ctx.baseClassSpecifier().identifier().getText()
+        return f"class {name}({base_class}):\n{body}"
+    else:
+        return f"class {name}:\n{body}"
 
 def ctor_definition_to_python(ctx: CppParser.CtorDefinitionContext) -> str:
-    # name = ctx.identifier().getText()
+    name = ctx.identifier().getText()
+    if name != get_current_class_name():
+        raise Exception(f"Constructor name {name} does not match class name {get_current_class_name()}.")
+
     args_str = to_python(ctx.argumentListDefinition()) if ctx.argumentListDefinition() is not None else ""
     body_str = to_python(ctx.executableScope())
-    return f"def __init__(self, {args_str}):\n{body_str}"
+    out = f"def __init__(self, {args_str}):\n"
+    if current_class_inherits():
+        out += f"  super().__init__()\n"
+    if len(body_str.strip()) == 0:
+        out += "  pass\n"
+    else:
+        out += f"{body_str}\n"
+    return out
 
-# useIdentifier: (thisKeyword ARROW)? identifier ((DOT | ARROW) identifier)*;
+# useIdentifier: (thisPrefix | baseClassPrefix)? identifier ((DOT | ARROW) identifier)*;
 def use_identifier_to_python(ctx: CppParser.UseIdentifierContext) -> str:
     out = ""
-    if ctx.thisKeyword() is not None:
+    if ctx.thisPrefix() is not None:
         out += "self."
+    elif ctx.baseClassPrefix() is not None:
+        out += "super()."
+
     for child in ctx.getChildren():
         if isinstance(child, CppParser.IdentifierContext):
             out += child.getText() + "."
+        
     return out.rstrip('.')
 
 def std_to_string_to_python(ctx: CppParser.StdToStringContext) -> str:
@@ -370,7 +406,7 @@ def main():
     tree = parser.program()
 
     # Display the parse tree
-    print(tree.toStringTree(recog=parser))
+    # print(tree.toStringTree(recog=parser))
 
     out = to_python(tree)
 

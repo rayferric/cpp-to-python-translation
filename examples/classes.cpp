@@ -1,13 +1,24 @@
 #include <iostream>
 
-class Item {
-private:
+class Base {
+public:
+    Base() {
+        std::cout << "Base constructor" << std::endl;
+    }
+
+    void hello() {
+        std::cout << "hello from Base" << std::endl;
+    }
+};
+
+class Item : public Base {
+public:
     std::string name;
     int price;
 
-public:
     void hello() {
-        std::cout << "hello" << std::endl;
+        Base::hello();
+        std::cout << "hello from Item" << std::endl;
     }
     
     std::string to_string() {
@@ -26,5 +37,7 @@ int main() {
     std::cout << item.name << std::endl;
     std::cout << item.price << std::endl;
     std::cout << item.to_string() << std::endl;
+    Base base = Base();
+    base.hello();
     return 0;
 }
