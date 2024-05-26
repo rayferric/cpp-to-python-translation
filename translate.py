@@ -90,6 +90,8 @@ def cout_statement_to_python(ctx: CppParser.CoutStatementContext) -> str:
 def cin_statement_to_python(ctx: CppParser.CinStatementContext) -> str:
     identifier = to_python(ctx.useIdentifier())
     var_type = get_variable_type(identifier)
+    if var_type is None:
+        var_type = "str"
     return f"{identifier} = {var_type}(input())\n"
 
 def return_statement_to_python(ctx: CppParser.ReturnStatementContext) -> str:
@@ -347,11 +349,36 @@ def use_identifier_to_python(ctx: CppParser.UseIdentifierContext) -> str:
     for child in ctx.getChildren():
         if isinstance(child, CppParser.IdentifierContext):
             out += child.getText() + "."
+        if isinstance(child, CppParser.ArrayItemContext):
+            out += to_python(child)
         
     return out.rstrip('.')
 
 def std_to_string_to_python(ctx: CppParser.StdToStringContext) -> str:
     return f"str({to_python(ctx.expression())})"
+
+# arrayDeclaration: typeSpecifier arrayDeclarationItem SEMICOLON;
+# arrayDeclarationItem: identifier LEFT_SQ atomicExpression RIGHT_SQ (ASSIGN LEFT_BRACKET argumentList RIGHT_BRACKET)?;
+
+def array_declaration_to_python(ctx: CppParser.ArrayDeclarationContext) -> str:
+    return to_python(ctx.arrayDeclarationItem())
+
+def array_declaration_item_to_python(ctx: CppParser.ArrayDeclarationItemContext) -> str:
+    name = ctx.identifier().getText()
+    size = to_python(ctx.atomicExpression())
+    if ctx.argumentList() is None:
+        args = "i for i in range(" + str(size) + ")"
+    else:
+        args = to_python(ctx.argumentList())
+    return f"{name} = [{args}]"
+
+# arrayItem: identifier LEFT_SQ atomicExpression RIGHT_SQ;
+def array_item_to_python(ctx: CppParser.ArrayItemContext) -> str:
+    name = ctx.identifier().getText()
+    size = to_python(ctx.atomicExpression())
+    return f"{name}[{size}]"
+
+
 
 context_type_handlers = {
     CppParser.ProgramContext: program_to_python,
@@ -381,7 +408,10 @@ context_type_handlers = {
     CppParser.ClassDefinitionContext: class_definition_to_python,
     CppParser.CtorDefinitionContext: ctor_definition_to_python,
     CppParser.UseIdentifierContext: use_identifier_to_python,
-    CppParser.StdToStringContext: std_to_string_to_python
+    CppParser.StdToStringContext: std_to_string_to_python,
+    CppParser.ArrayDeclarationContext: array_declaration_to_python,
+    CppParser.ArrayDeclarationItemContext: array_declaration_item_to_python,
+    CppParser.ArrayItemContext: array_item_to_python,
 }
 
 def to_python(ctx: ParserRuleContext) -> str:
