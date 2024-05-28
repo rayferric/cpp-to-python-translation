@@ -26,7 +26,7 @@ Antlr4 - generator skanerów i parserów
 ```
 pip install antlr4-python3-runtime==4.9.2
 ```
- III. Uruchom skrypt z pliku gen-grammar\
+ III. Uruchom skrypt z pliku [gen-grammar](https://github.com/rayferric/cpp-to-python-translation/blob/main/scripts/gen-grammar)\
  IV. Uruchom translate.py w terminalu jako argument podając nazwę pliku do skonwertowania
 ```
 python translate.py examples/functions.cpp
