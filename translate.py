@@ -89,9 +89,11 @@ def cout_statement_to_python(ctx: CppParser.CoutStatementContext) -> str:
 
 def cin_statement_to_python(ctx: CppParser.CinStatementContext) -> str:
     identifier = to_python(ctx.useIdentifier())
-    var_type = get_variable_type(identifier)
-    if var_type is None:
-        var_type = "str"
+    # remove [...] suffix for array items
+    base_identifier = identifier
+    if '[' in base_identifier:
+        base_identifier = base_identifier[:base_identifier.index('[')]
+    var_type = get_variable_type(base_identifier)
     return f"{identifier} = {var_type}(input())\n"
 
 def return_statement_to_python(ctx: CppParser.ReturnStatementContext) -> str:
@@ -361,16 +363,21 @@ def std_to_string_to_python(ctx: CppParser.StdToStringContext) -> str:
 # arrayDeclarationItem: identifier LEFT_SQ atomicExpression RIGHT_SQ (ASSIGN LEFT_BRACKET argumentList RIGHT_BRACKET)?;
 
 def array_declaration_to_python(ctx: CppParser.ArrayDeclarationContext) -> str:
+    type_name = to_python(ctx.typeSpecifier())
+    identifier = ctx.arrayDeclarationItem().identifier().getText()
+    scope_infos[-1].variable_types[identifier] = type_name
+    print(f"scope_infos[-1].variable_types: {scope_infos[-1].variable_types}")
+
     return to_python(ctx.arrayDeclarationItem())
 
 def array_declaration_item_to_python(ctx: CppParser.ArrayDeclarationItemContext) -> str:
     name = ctx.identifier().getText()
     size = to_python(ctx.atomicExpression())
     if ctx.argumentList() is None:
-        args = "i for i in range(" + str(size) + ")"
+        rval = f"[None] * {size}"
     else:
-        args = to_python(ctx.argumentList())
-    return f"{name} = [{args}]"
+        rval = f"[{to_python(ctx.argumentList())}]"
+    return f"{name} = {rval}"
 
 # arrayItem: identifier LEFT_SQ atomicExpression RIGHT_SQ;
 def array_item_to_python(ctx: CppParser.ArrayItemContext) -> str:
