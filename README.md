@@ -7,13 +7,13 @@ rayferric@student.agh.edu.pl adamtokarz@student.agh.edu.pl
 ### a) Główne cele programu
 Transpilator z języka C++ na Python. Program będzie przyjmował na wejściu plik z kodem C++ i zapisywał obok niego przetłumaczony plik o tej samej nazwie, lecz z rozszerzeniem .py. Transpilator będzie operować na podzbiorze składni języka C++, w szczególności zawierającej w sobie elementy języka odpowiadające za programowanie obiektowe.\
 ### b) Rodzaj translatora
-transpiler
+transpilator
 ### c) Wynik działania programu
 Program tworzy nowy plik źródłowy w Pythonie, który następnie można uruchomić za pomocą interpretera Pythona.
 ### d) Język implementacji
 Implementacja transpilatora w języku Python.
 ### e) Sposób realizacji programu
- Skaner i parser zostaną wygenerowane przez Antlr4. Pliki z przykładowym kodem C++ zostaną przez nas przygotowane.
+ Skaner i parser zostaną wygenerowane przez Antlr4. Pliki z przykładowym kodem C++ zostaną przez nas przygotowane. W programie napiszemy funkcje konwertujące elementy języka C++ na elementy języka Python.
 ## 4. Spis tokenów
 [CppTokens](https://github.com/rayferric/cpp-to-python-translation/blob/main/grammar/CppTokens.g4)
 ## 5. Gramatyka przetwarzanego formatu
